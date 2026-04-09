@@ -1,15 +1,15 @@
-# AI-Assisted Work Breakdown Structure (WBS) Generator
+# Professional Project Planning Intelligence
 
-An intelligent tool for generating, refining, comparing, and evaluating Work Breakdown Structures using AI.
+An elite AI Consultant that transforms your project ideas into comprehensive actionable execution plans in seconds.
 
 ## Overview
 
-This Streamlit application leverages OpenAI's GPT models to assist project managers and teams in creating comprehensive Work Breakdown Structures. The tool provides AI-powered WBS generation with customizable parameters for creativity and model selection.
+This Streamlit application leverages Anthropic's Claude models to serve as an elite AI consultant for professional project planning. It transforms high-level project ideas into detailed, actionable execution plans including Work Breakdown Structures (WBS), task hierarchies, and project scoping.
 
 ## Features
 
-- **AI-Powered WBS Generation**: Generate detailed work breakdown structures from project descriptions
-- **Model Selection**: Choose between GPT-4.1-mini and GPT-4.1 models
+- **AI-Powered Project Planning**: Transform project ideas into comprehensive execution plans with detailed WBS
+- **Model Selection**: Choose between Claude 3 Haiku, Sonnet, and Opus models
 - **Creativity Control**: Adjust temperature settings for more deterministic or creative outputs
 - **Example Projects**: Quick-start templates for common project types
 - **Comparison & Evaluation**: Compare and score different WBS variations
@@ -22,11 +22,17 @@ pip install -r requirements.txt
 
 ## Setup
 
-1. Create a `.streamlit/secrets.toml` file with your OpenAI API key:
+1. Set your Anthropic API key using either method:
 
-```toml
-OPENAI_API_KEY = "your-api-key-here"
-```
+   **Option A:** Create a `.streamlit/secrets.toml` file:
+   ```toml
+   ANTHROPIC_API_KEY = "your-anthropic-api-key-here"
+   ```
+
+   **Option B:** Set an environment variable:
+   ```bash
+   export ANTHROPIC_API_KEY="your-anthropic-api-key-here"
+   ```
 
 2. Run the application:
 
@@ -39,7 +45,7 @@ streamlit run app.py
 1. Launch the application and access it via the local URL (default: http://localhost:8501)
 2. Enter a project description or select from example templates
 3. Choose your preferred AI model and adjust creativity settings
-4. Generate and refine your WBS structure
+4. Generate and refine your complete project execution plan
 
 ## Authors
 
@@ -62,8 +68,8 @@ project-wbs-tool/
 
 - Python 3.11+
 - Streamlit
-- OpenAI Python SDK
+- Anthropic Python SDK
 
 ## License
 
-This project is part of a thesis prototype for advanced AI-assisted project management tools.
+This project is part of a thesis prototype for advanced AI-assisted project management and planning tools.

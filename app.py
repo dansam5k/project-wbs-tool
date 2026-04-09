@@ -1,22 +1,35 @@
 import streamlit as st
 import json
-from openai import OpenAI
+import os
+from dotenv import load_dotenv
+from anthropic import Anthropic, RateLimitError, AuthenticationError, BadRequestError, NotFoundError
 
-client = OpenAI(api_key=st.secrets.get("OPENAI_API_KEY", None))
+# Load environment variables from .env file
+load_dotenv()
 
-st.set_page_config(page_title="AI WBS Generator", layout="wide")
+# Get API key from secrets.toml, env var, or .env file
+api_key = st.secrets.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_API_KEY")
+client = Anthropic(api_key=api_key)
+
+st.set_page_config(page_title="Professional Project Planning Intelligence", layout="wide")
 
 # ---------------- Sidebar ----------------
 st.sidebar.title("⚙️ Settings")
-model = st.sidebar.selectbox("Model", ["gpt-4.1-mini", "gpt-4.1"])
+model = st.sidebar.selectbox("Model", [
+    "claude-3-5-sonnet-20241022",
+    "claude-3-5-haiku-20241022",
+    "claude-3-opus-20240229",
+    "claude-3-sonnet-20240229",
+    "claude-3-haiku-20240307"
+])
 temperature = st.sidebar.slider("Creativity (temperature)", 0.0, 1.0, 0.3)
 
 st.sidebar.markdown("---")
 st.sidebar.write("💡 Lower temperature = more deterministic output")
 
 # ---------------- Title ----------------
-st.title("🧠 AI-Assisted Work Breakdown Structure Generator")
-st.markdown("Generate, refine, compare, and evaluate WBS using AI.")
+st.title("🧠 Professional Project Planning Intelligence")
+st.markdown("An elite AI Consultant that transforms your project ideas into comprehensive actionable execution plans in seconds.")
 
 # ---------------- Examples ----------------
 examples = {
@@ -52,12 +65,25 @@ Create a hierarchical Work Breakdown Structure (WBS):
 Project:
 {project_description}
 """
-                response = client.chat.completions.create(
-                    model=model,
-                    messages=[{"role": "user", "content": prompt}],
-                    temperature=temperature
-                )
-                st.session_state["wbs"] = response.choices[0].message.content
+                try:
+                    response = client.messages.create(
+                        model=model,
+                        max_tokens=4096,
+                        messages=[{"role": "user", "content": prompt}],
+                        temperature=temperature
+                    )
+                    st.session_state["wbs"] = response.content[0].text
+                except RateLimitError:
+                    st.error("⚠️ Claude API rate limit exceeded. Please try again later.")
+                except AuthenticationError:
+                    st.error("⚠️ Invalid API key. Please check your `.streamlit/secrets.toml` file.")
+                except BadRequestError as e:
+                    if "credit balance is too low" in str(e):
+                        st.error("⚠️ Anthropic credit balance too low. Please go to https://console.anthropic.com/plans to upgrade or purchase credits.")
+                    else:
+                        st.error(f"⚠️ API Error: {e}")
+                except NotFoundError:
+                    st.error("⚠️ Model not found. Please select a different model from the sidebar.")
 
 # ---------------- Improve ----------------
 with col2:
@@ -71,12 +97,25 @@ Improve this WBS:
 
 {st.session_state['wbs']}
 """
-            response = client.chat.completions.create(
-                model=model,
-                messages=[{"role": "user", "content": improve_prompt}],
-                temperature=temperature
-            )
-            st.session_state["wbs"] = response.choices[0].message.content
+            try:
+                response = client.messages.create(
+                    model=model,
+                    max_tokens=4096,
+                    messages=[{"role": "user", "content": improve_prompt}],
+                    temperature=temperature
+                )
+                st.session_state["wbs"] = response.content[0].text
+            except RateLimitError:
+                st.error("⚠️ Claude API rate limit exceeded. Please try again later.")
+            except AuthenticationError:
+                st.error("⚠️ Invalid API key. Please check your `.streamlit/secrets.toml` file.")
+            except BadRequestError as e:
+                if "credit balance is too low" in str(e):
+                    st.error("⚠️ Anthropic credit balance too low. Please go to https://console.anthropic.com/plans to upgrade or purchase credits.")
+                else:
+                    st.error(f"⚠️ API Error: {e}")
+            except NotFoundError:
+                st.error("⚠️ Model not found. Please select a different model from the sidebar.")
 
 # ---------------- Second Generation (Comparison) ----------------
 with col3:
@@ -88,12 +127,25 @@ Generate an alternative WBS with a different structure and phrasing.
 Project:
 {project_description}
 """
-            response = client.chat.completions.create(
-                model=model,
-                messages=[{"role": "user", "content": alt_prompt}],
-                temperature=temperature
-            )
-            st.session_state["wbs_alt"] = response.choices[0].message.content
+            try:
+                response = client.messages.create(
+                    model=model,
+                    max_tokens=4096,
+                    messages=[{"role": "user", "content": alt_prompt}],
+                    temperature=temperature
+                )
+                st.session_state["wbs_alt"] = response.content[0].text
+            except RateLimitError:
+                st.error("⚠️ Claude API rate limit exceeded. Please try again later.")
+            except AuthenticationError:
+                st.error("⚠️ Invalid API key. Please check your `.streamlit/secrets.toml` file.")
+            except BadRequestError as e:
+                if "credit balance is too low" in str(e):
+                    st.error("⚠️ Anthropic credit balance too low. Please go to https://console.anthropic.com/plans to upgrade or purchase credits.")
+                else:
+                    st.error(f"⚠️ API Error: {e}")
+            except NotFoundError:
+                st.error("⚠️ Model not found. Please select a different model from the sidebar.")
 
 # ---------------- Utility Functions ----------------
 def count_tasks(data):
@@ -175,4 +227,4 @@ if "wbs" in st.session_state and "wbs_alt" in st.session_state:
 
 # ---------------- Footer ----------------
 st.markdown("---")
-st.caption("Advanced AI WBS Tool with scoring + comparison (Thesis Prototype)")
+st.caption("Professional Project Planning Intelligence (Thesis Prototype)")
