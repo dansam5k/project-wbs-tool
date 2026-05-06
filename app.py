@@ -16,11 +16,10 @@ st.set_page_config(page_title="Professional Project Planning Intelligence", layo
 # ---------------- Sidebar ----------------
 st.sidebar.title("⚙️ Settings")
 model = st.sidebar.selectbox("Model", [
-    "claude-3-5-sonnet-20241022",
-    "claude-3-5-haiku-20241022",
-    "claude-3-opus-20240229",
-    "claude-3-sonnet-20240229",
-    "claude-3-haiku-20240307"
+    "claude-opus-4-7",
+    "claude-opus-4-6", 
+    "claude-sonnet-4-6",
+    
 ])
 temperature = st.sidebar.slider("Creativity (temperature)", 0.0, 1.0, 0.3)
 
@@ -60,17 +59,21 @@ You are a senior project manager.
 Create a hierarchical Work Breakdown Structure (WBS):
 - 3 levels
 - Deliverable-oriented
-- JSON format
+- JSON format ONLY
+- Do not include any explanation or markdown, just the JSON
 
 Project:
 {project_description}
 """
                 try:
+                    # When thinking is enabled, temperature must be 1
                     response = client.messages.create(
                         model=model,
-                        max_tokens=4096,
+                        max_tokens=20000,
                         messages=[{"role": "user", "content": prompt}],
-                        temperature=temperature
+                        temperature=1.0,
+                        thinking={"type": "adaptive"},
+                        output_config={"effort": "high"}
                     )
                     st.session_state["wbs"] = response.content[0].text
                 except RateLimitError:
@@ -98,11 +101,14 @@ Improve this WBS:
 {st.session_state['wbs']}
 """
             try:
+                # When thinking is enabled, temperature must be 1
                 response = client.messages.create(
                     model=model,
-                    max_tokens=4096,
+                    max_tokens=20000,
                     messages=[{"role": "user", "content": improve_prompt}],
-                    temperature=temperature
+                    temperature=1.0,
+                    thinking={"type": "adaptive"},
+                    output_config={"effort": "high"}
                 )
                 st.session_state["wbs"] = response.content[0].text
             except RateLimitError:
@@ -128,11 +134,14 @@ Project:
 {project_description}
 """
             try:
+                # When thinking is enabled, temperature must be 1
                 response = client.messages.create(
                     model=model,
-                    max_tokens=4096,
+                    max_tokens=20000,
                     messages=[{"role": "user", "content": alt_prompt}],
-                    temperature=temperature
+                    temperature=1.0,
+                    thinking={"type": "adaptive"},
+                    output_config={"effort": "high"}
                 )
                 st.session_state["wbs_alt"] = response.content[0].text
             except RateLimitError:
@@ -167,42 +176,104 @@ with colA:
     if "wbs" in st.session_state:
         st.subheader("📦 WBS A")
         try:
+            # Try to parse JSON
             parsed = json.loads(st.session_state["wbs"])
-
-            st.code(st.session_state["wbs"], language="json")
+            
+            # Beautiful WBS Display
+            st.markdown("### 📋 Project Breakdown")
+            
+            # Project Title
+            if "project" in parsed:
+                st.markdown(f"**🎯 Project:** {parsed['project']}")
+            
+            # Display phases
+            if "phases" in parsed:
+                for phase in parsed["phases"]:
+                    with st.expander(f"� {phase['id']}. {phase['name']}", expanded=True):
+                        if "deliverables" in phase:
+                            for deliverable in phase["deliverables"]:
+                                st.markdown(f"**📄 {deliverable['id']}. {deliverable['name']}**")
+                                if "components" in deliverable:
+                                    for component in deliverable["components"]:
+                                        st.markdown(f"• {component}")
+            
+            # Raw JSON for developers
+            with st.expander("🔍 View Raw JSON (for developers)"):
+                st.code(st.session_state["wbs"], language="json")
 
             # Scoring
             tasks = count_tasks(parsed)
             depth_score = 3  # fixed since prompt enforces
             completeness = min(tasks / 20, 1.0) * 5
 
-            st.markdown("### 📊 Score")
-            st.write(f"Tasks: {tasks}")
-            st.write(f"Completeness Score (approx): {round(completeness,2)}/5")
-            st.write(f"Depth Score: {depth_score}/5")
+            st.markdown("### 📊 Project Metrics")
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("Total Tasks", tasks)
+            with col2:
+                st.metric("Completeness Score", f"{round(completeness,1)}/5")
+            with col3:
+                st.metric("Depth Level", f"{depth_score}/5")
 
-        except:
-            st.error("Invalid JSON")
+        except json.JSONDecodeError as e:
+            st.error(f"❌ Invalid JSON: {e}")
+            with st.expander("🔍 Raw Response"):
+                st.text(st.session_state["wbs"])
+        except Exception as e:
+            st.error(f"❌ Error: {e}")
+            with st.expander("🔍 Raw Response"):
+                st.text(st.session_state["wbs"])
 
 # Alternative WBS
 with colB:
     if "wbs_alt" in st.session_state:
         st.subheader("📦 WBS B (Alternative)")
         try:
+            # Try to parse JSON
             parsed_alt = json.loads(st.session_state["wbs_alt"])
-
-            st.code(st.session_state["wbs_alt"], language="json")
+            
+            # Beautiful WBS Display
+            st.markdown("### 📋 Alternative Project Breakdown")
+            
+            # Project Title
+            if "project" in parsed_alt:
+                st.markdown(f"**🎯 Project:** {parsed_alt['project']}")
+            
+            # Display phases
+            if "phases" in parsed_alt:
+                for phase in parsed_alt["phases"]:
+                    with st.expander(f"� {phase['id']}. {phase['name']}", expanded=True):
+                        if "deliverables" in phase:
+                            for deliverable in phase["deliverables"]:
+                                st.markdown(f"**📄 {deliverable['id']}. {deliverable['name']}**")
+                                if "components" in deliverable:
+                                    for component in deliverable["components"]:
+                                        st.markdown(f"• {component}")
+            
+            # Raw JSON for developers
+            with st.expander("🔍 View Raw JSON (for developers)"):
+                st.code(st.session_state["wbs_alt"], language="json")
 
             # Scoring
             tasks_alt = count_tasks(parsed_alt)
             completeness_alt = min(tasks_alt / 20, 1.0) * 5
-
-            st.markdown("### 📊 Score")
-            st.write(f"Tasks: {tasks_alt}")
-            st.write(f"Completeness Score: {round(completeness_alt,2)}/5")
-
-        except:
-            st.error("Invalid JSON")
+            
+            st.markdown("### 📊 Alternative Project Metrics")
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("Total Tasks", tasks_alt)
+            with col2:
+                st.metric("Completeness Score", f"{round(completeness_alt,1)}/5")
+            with col3:
+                st.metric("Depth Level", f"{depth_score}/5")
+        except json.JSONDecodeError as e:
+            st.error(f"❌ Invalid JSON: {e}")
+            with st.expander("🔍 Raw Response"):
+                st.text(st.session_state["wbs_alt"])
+        except Exception as e:
+            st.error(f"❌ Error: {e}")
+            with st.expander("🔍 Raw Response"):
+                st.text(st.session_state["wbs_alt"])
 
 # ---------------- Comparison Insight ----------------
 if "wbs" in st.session_state and "wbs_alt" in st.session_state:
