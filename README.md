@@ -49,8 +49,8 @@ streamlit run app.py
 
 ## Authors
 
-- **Daniel Samuel**
-- **Sam Abiodun**
+- **Sam Abiodun** – Project Owner  
+- **Daniel Samuel** – Software Engineer
 
 ## Project Structure
 
